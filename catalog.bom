@@ -20,7 +20,7 @@ brooklyn.catalog:
   id: brooklyn-jboss-application-server-7
   version: 0.10.0-SNAPSHOT
   name: JBoss Application Server 7
-  description: AS7: an open source Java application server from JBoss
+  description: AS7 - an open source Java application server from JBoss
   itemType: template
   license: Apache-2.0
   publish:
