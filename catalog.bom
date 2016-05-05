@@ -22,10 +22,12 @@ brooklyn.catalog:
   name: JBoss Application Server 7
   description: AS7 - an open source Java application server from JBoss
   itemType: template
+  iconUrl: https://raw.githubusercontent.com/brooklyncentral/brooklyn-jboss-application-server-7/master/jboss-logo.png
   license: Apache-2.0
   publish:
     license_code: Apache-2.0
     reference: reference.json
+    qa: catalog.tests.bom
   item:
     services:
     - type: org.apache.brooklyn.entity.webapp.jboss.JBoss7Server
