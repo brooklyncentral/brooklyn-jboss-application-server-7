@@ -40,7 +40,7 @@ brooklyn.catalog:
           brooklyn.children:
           # Is up and can deploy
           - type: org.apache.brooklyn.test.framework.TestSensor
-            name: TEST [service.state] IS [running] WITHIN [10m]
+            name: TEST [service.state] IS [running]
             target: $brooklyn:component("jboss7")
             sensor: service.state
             assert:
