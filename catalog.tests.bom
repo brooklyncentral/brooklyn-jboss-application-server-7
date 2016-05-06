@@ -31,6 +31,8 @@ brooklyn.catalog:
       - type: brooklyn-jboss-application-server-7
         id: jboss7
       - type: org.apache.brooklyn.test.framework.TestCase
+        brooklyn.config:
+          timeout: 15m
         name: JBoss AS 7 Tests
         brooklyn.children:
         - type: org.apache.brooklyn.test.framework.TestCase
@@ -41,14 +43,12 @@ brooklyn.catalog:
             name: TEST [service.state] IS [running] WITHIN [10m]
             target: $brooklyn:component("jboss7")
             sensor: service.state
-            timeout: 10m
             assert:
             - matches: running
           - type: org.apache.brooklyn.test.framework.TestEffector
             name: Invoke Deploy Effector
             targetId: jboss7
             effector: deploy
-            timeout: 5m
             params:
               url: https://tomcat.apache.org/tomcat-8.0-doc/appdev/sample/sample.war
               targetName: sample
@@ -63,12 +63,10 @@ brooklyn.catalog:
             effector: restart
             params:
               restartMachine: false
-            timeout: 5m
           - type: org.apache.brooklyn.test.framework.TestSensor
             name: Check JBoss is up after restart
             targetId: jboss7
             sensor: service.isUp
-            timeout: 1m
             assert:
             - equals: true
           - type: org.apache.brooklyn.test.framework.SimpleShellCommandTest
@@ -77,10 +75,6 @@ brooklyn.catalog:
             command: ps -ef | grep [j]boss
             assertStatus:
               equals: 0
-            assertOut:
-              isEmpty: false
-            assertErr:
-              isEmpty: true
           # Effector: stop + restart Tests
           - type: org.apache.brooklyn.test.framework.TestEffector
             name: Invoke stop Effector
@@ -88,12 +82,10 @@ brooklyn.catalog:
             effector: stop
             params:
               stopMachineMode: NEVER
-            timeout: 5m
           - type: org.apache.brooklyn.test.framework.TestSensor
             name: Check JBoss is not up after stop
             targetId: jboss7
             sensor: service.isUp
-            timeout: 5m
             assert:
             - equals: false
           - type: org.apache.brooklyn.test.framework.SimpleShellCommandTest
@@ -102,22 +94,16 @@ brooklyn.catalog:
             command: ps -ef | grep [j]boss
             assertStatus:
               equals: 1
-            assertOut:
-              isEmpty: true
-            assertErr:
-              isEmpty: true
           - type: org.apache.brooklyn.test.framework.TestEffector
             name: Invoke restart Effector
             targetId: jboss7
             effector: restart
             params:
               restartMachine: false
-            timeout: 5m
           - type: org.apache.brooklyn.test.framework.TestSensor
             name: Check JBoss is up after restart
             targetId: jboss7
             sensor: service.isUp
-            timeout: 1m
             assert:
             - equals: true
           - type: org.apache.brooklyn.test.framework.SimpleShellCommandTest
@@ -126,10 +112,6 @@ brooklyn.catalog:
             command: ps -ef | grep [j]boss
             assertStatus:
               equals: 0
-            assertOut:
-              isEmpty: false
-            assertErr:
-              isEmpty: true
         
         - type: org.apache.brooklyn.test.framework.TestCase
           name: "HTTP Tests"
@@ -141,7 +123,6 @@ brooklyn.catalog:
               $brooklyn:formatString("http://%s:%s/sample/hello",
               $brooklyn:component("jboss7").attributeWhenReady("host.address"),
               $brooklyn:component("jboss7").attributeWhenReady("http.port"))
-            timeout: 10m
             applyAssertionTo: status
             assert:
             - isEqualTo: 200
@@ -151,7 +132,6 @@ brooklyn.catalog:
               $brooklyn:formatString("http://%s:%s/sample/hello.jsp",
               $brooklyn:component("jboss7").attributeWhenReady("host.address"),
               $brooklyn:component("jboss7").attributeWhenReady("http.port"))
-            timeout: 10m
             applyAssertionTo: status
             assert:
             - isEqualTo: 200
