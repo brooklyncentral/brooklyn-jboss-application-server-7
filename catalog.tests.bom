@@ -1,0 +1,127 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+brooklyn.catalog:
+  items:
+  - id: jboss-application-server-7-tests
+    version: 1.0
+    itemType: template
+    iconUrl: https://github.com/brooklyncentral/brooklyn-jboss-application-server-7/raw/master/jboss-logo.png
+    name: JBoss Application Server 7 tests
+    description: Test that JBoss is running
+    license_code: Apache-2.0
+    license_url: http://www.apache.org/licenses/LICENSE-2.0.txt
+    item:
+      services:
+      - type: brooklyn-jboss-application-server-7
+        id: jboss7
+      - type: org.apache.brooklyn.test.framework.TestCase
+        brooklyn.config:
+          timeout: 15m
+          targetId: jboss7
+        name: JBoss Application Server 7 Tests
+        brooklyn.children:
+        - type: org.apache.brooklyn.test.framework.TestCase
+          name: "Sensor Tests"
+          brooklyn.children:
+          # Is up and can deploy
+          - type: org.apache.brooklyn.test.framework.TestSensor
+            name: TEST [service.state] IS [running]
+            sensor: service.state
+            assert:
+            - matches: running
+          - type: org.apache.brooklyn.test.framework.TestEffector
+            name: Invoke Deploy Effector
+            effector: deploy
+            params:
+              url: https://tomcat.apache.org/tomcat-8.0-doc/appdev/sample/sample.war
+              targetName: sample
+        
+        - type: org.apache.brooklyn.test.framework.TestCase
+          name: "Effector Restart, Stop & Restart Tests"
+          brooklyn.children:      
+          # Effector: restart Tests
+          - type: org.apache.brooklyn.test.framework.TestEffector
+            name: Invoke restart Effector
+            effector: restart
+            params:
+              restartMachine: false
+          - type: org.apache.brooklyn.test.framework.TestSensor
+            name: Check JBoss is up after restart
+            sensor: service.isUp
+            assert:
+            - equals: true
+          - type: org.apache.brooklyn.test.framework.SimpleShellCommandTest
+            name: Check JBoss process has restarted
+            command: ps -ef | grep [j]boss
+            assertStatus:
+              equals: 0
+          # Effector: stop + restart Tests
+          - type: org.apache.brooklyn.test.framework.TestEffector
+            name: Invoke stop Effector
+            effector: stop
+            params:
+              stopMachineMode: NEVER
+          - type: org.apache.brooklyn.test.framework.TestSensor
+            name: Check JBoss is not up after stop
+            sensor: service.isUp
+            assert:
+            - equals: false
+          - type: org.apache.brooklyn.test.framework.SimpleShellCommandTest
+            name: Check JBoss process has stopped
+            command: ps -ef | grep [j]boss
+            assertStatus:
+              equals: 1
+          - type: org.apache.brooklyn.test.framework.TestEffector
+            name: Invoke restart Effector
+            effector: restart
+            params:
+              restartMachine: false
+          - type: org.apache.brooklyn.test.framework.TestSensor
+            name: Check JBoss is up after restart
+            sensor: service.isUp
+            assert:
+            - equals: true
+          - type: org.apache.brooklyn.test.framework.SimpleShellCommandTest
+            name: Check JBoss process has restarted
+            command: ps -ef | grep [j]boss
+            assertStatus:
+              equals: 0
+        
+        - type: org.apache.brooklyn.test.framework.TestCase
+          name: "HTTP Tests"
+          brooklyn.children:  
+          # HTTP Tests
+          - type: org.apache.brooklyn.test.framework.TestHttpCall
+            name: Check Servlet HTTP Response Status Code
+            url: >
+              $brooklyn:formatString("http://%s:%s/sample/hello",
+              $brooklyn:component("jboss7").attributeWhenReady("host.address"),
+              $brooklyn:component("jboss7").attributeWhenReady("http.port"))
+            applyAssertionTo: status
+            assert:
+            - isEqualTo: 200
+          - type: org.apache.brooklyn.test.framework.TestHttpCall
+            name: Check JSP HTTP Response Status Code
+            url: >
+              $brooklyn:formatString("http://%s:%s/sample/hello.jsp",
+              $brooklyn:component("jboss7").attributeWhenReady("host.address"),
+              $brooklyn:component("jboss7").attributeWhenReady("http.port"))
+            applyAssertionTo: status
+            assert:
+            - isEqualTo: 200
