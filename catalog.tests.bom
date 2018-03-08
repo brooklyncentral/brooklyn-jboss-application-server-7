@@ -47,7 +47,7 @@ brooklyn.catalog:
           name: Invoke Deploy Effector
           effector: deploy
           params:
-            url: https://tomcat.apache.org/tomcat-8.0-doc/appdev/sample/sample.war
+            url: https://github.com/brooklyncentral/brooklyn-jboss-application-server-7/blob/master/sample.war
             targetName: sample
         
         - type: test-case
